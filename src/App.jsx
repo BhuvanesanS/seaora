@@ -94,7 +94,20 @@ function App() {
             <div className="hero-actions"><button className="button" onClick={() => scrollTo('contact')}>Request a quote <b>→</b></button><button className="button button-outline" onClick={() => scrollTo('products')}>Explore products</button></div>
             <div className="trust-list"><span>✓ Export ready</span><span>✓ Batch tested</span><span>✓ Bulk supply</span></div>
           </div>
-          <div className="hero-image"><div className="hero-image-overlay"></div><p>From the sea<br/><em>to the mill</em></p></div>
+          <div className="hero-image" aria-hidden="true">
+            <div className="hero-horizon"></div>
+            <div className="marine-orb orb-one"></div>
+            <div className="marine-orb orb-two"></div>
+            <div className="marine-orb orb-three"></div>
+            <div className="product-monolith">
+              <span className="monolith-kicker">Marine grade</span>
+              <strong>SEA<br/>ORA</strong>
+              <i>Pure coastal nutrition</i>
+            </div>
+            <div className="hero-wave wave-a"></div>
+            <div className="hero-wave wave-b"></div>
+            <p>From the sea<br/><em>to the mill</em></p>
+          </div>
         </div>
       </section>
 
