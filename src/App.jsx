@@ -1,152 +1,86 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
-const navItems = [
-  ['Home', 'home'],
-  ['About', 'about'],
-  ['Products', 'products'],
-  ['Infrastructure', 'infrastructure'],
-  ['Process', 'process'],
-  ['Certifications', 'certifications'],
-  ['FAQ', 'faq'],
+const pages = [['Home', '/'], ['About', '/about'], ['Products', '/products'], ['Process', '/process'], ['Quality', '/quality'], ['Contact', '/contact']];
+const products = [
+  { name: 'Fish Meal', number: '01', type: 'Marine protein ingredient', text: 'A dependable protein ingredient for aquaculture, poultry, and livestock feed formulations.', details: ['Grade-led protein options', 'Packed for bulk or export supply', 'Specification sheet on request'] },
+  { name: 'Fish Oil', number: '02', type: 'Marine omega source', text: 'Marine oil for nutrition-focused feed blends and industrial applications.', details: ['Omega-rich marine profile', 'Drum, IBC, and bulk options', 'Batch documentation available'] },
+  { name: 'Fish Soluble Paste', number: '03', type: 'Nutrient concentrate', text: 'A concentrated marine ingredient designed to support palatability and nutrient density.', details: ['Easy-to-blend liquid format', 'Useful in specialised feed recipes', 'Packing guidance on request'] },
+];
+const directions = [
+  { id: 'harbour', number: '01', name: 'Coastal Authority', note: 'Deep navy, Seaora red, and electric blue. The recommended direction for a premium, export-facing brand.' },
+  { id: 'ember', number: '02', name: 'Industrial Heritage', note: 'Charcoal, brick red, and warm sand. A confident, manufacturing-led visual language.' },
+  { id: 'tide', number: '03', name: 'Clean Ocean', note: 'Bright white, ocean blue, and coral. A lighter, technical direction for product-led storytelling.' },
 ];
 
-const productRows = [
-  {
-    number: '01',
-    name: 'Fish Meal',
-    eyebrow: 'Marine protein source',
-    description: 'A high-protein feed ingredient milled from fresh marine catch for shrimp, fish, poultry, and livestock feed manufacturing.',
-    specs: [['Protein', 'Min. 65%', 'Min. 62-63%', 'Min. 60%'], ['Moisture', 'Max. 7-10%', 'Max. 7-10%', 'Max. 7-10%'], ['Fat', 'Max. 8-10%', 'Max. 8-10%', 'Max. 8-10%'], ['Packing', '50 Kg HDPE', '50 Kg HDPE', '50 Kg HDPE']],
-    benefits: ['High digestible protein for faster growth', 'Rich in Omega-3 and amino acids', 'Improves feed conversion ratio (FCR)'],
-    image: 'https://images.unsplash.com/photo-1544550285-f813152fb2fd?auto=format&fit=crop&w=900&q=85',
-  },
-  {
-    number: '02',
-    name: 'Fish Oil',
-    eyebrow: 'Marine omega-3 source',
-    description: 'A concentrated source of Omega-3 fatty acids (EPA and DHA), extracted during meal production for aquaculture, poultry, and industrial applications.',
-    specs: [['Free Fatty Acid (FFA)', '≤ 5%'], ['Moisture & Impurities', '≤ 1%'], ['Peroxide Value', '≤ 10 meq/kg'], ['Packing', 'Flexi Bags / Plastic Barrels']],
-    benefits: ['Rich source of Omega-3 (EPA and DHA)', 'Enhances growth and immunity', 'Sustainable, zero-waste by-product'],
-    image: 'https://images.unsplash.com/photo-1611078489935-0cb964de46d6?auto=format&fit=crop&w=900&q=85',
-  },
-  {
-    number: '03',
-    name: 'Fish Soluble Paste',
-    eyebrow: 'Marine nutrient concentrate',
-    description: 'A protein-rich, semi-viscous by-product used as a feed ingredient for palatability and nutrient density in sustainable feed formulations.',
-    specs: [['Protein', 'Min. 40%'], ['Moisture', 'Max. 45%'], ['TVBN', 'Max. 350 mg'], ['Packing', '200 L Drum']],
-    benefits: ['Concentrated, easy-to-blend nutrients', 'Boosts feed formulation performance', 'Makes use of every part of the catch'],
-    image: 'https://images.unsplash.com/photo-1510137600163-2729bc695a6f?auto=format&fit=crop&w=900&q=85',
-  },
-];
+function CountUp({ value, label }) {
+  const [count, setCount] = useState(0);
+  const [node, setNode] = useState(null);
+  useEffect(() => {
+    if (!node) return undefined;
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      const start = performance.now();
+      const animate = (now) => {
+        const progress = Math.min((now - start) / 1000, 1);
+        setCount(Math.round(value * (1 - (1 - progress) ** 3)));
+        if (progress < 1) requestAnimationFrame(animate);
+      };
+      requestAnimationFrame(animate);
+      observer.disconnect();
+    }, { threshold: 0.35 });
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [node, value]);
+  return <div className="metric" ref={setNode}><strong>{count}</strong><span>{label}</span></div>;
+}
 
-const certificates = ['GMP+ Certified', 'FSSC 22000', 'HACCP', 'Export Inspection Council', 'MPEDA Processing Plant', 'MPEDA Storage Premises', 'MPEDA Export', 'IFFO Member', 'MSME Registration', 'China Registration - Fish Oil', 'China Registration - Fish Meal'];
-
-const faqs = [
-  ['Do you export internationally?', 'Yes. Our documentation and packaging are export-ready, and our Dubai sales office supports international buyers.'],
-  ['How fresh is your raw material?', 'Our facility is on the Tamil Nadu coast in Manapad. Raw material typically reaches processing within hours of catch, not days.'],
-  ['What packaging options are available?', 'Fish Meal ships in 50 kg HDPE/PP woven bags, Fish Oil in drums, and custom packaging or private labeling is available on request.'],
-  ['Can I request a sample before ordering?', 'Yes, samples can be arranged for serious buyers evaluating our products. Please contact our sales team.'],
-  ['What certifications does your facility hold?', 'Our facility is GMP+ and FSSC 22000 certified and follows HACCP protocols. Certification documents are available on request.'],
-  ['What is the minimum order quantity?', 'MOQ depends on the product and packaging format. Send your requirement to our sales team for a specific quote.'],
-];
-
-function SectionTitle({ eyebrow, title, copy, centered = false }) {
-  return <div className={`section-title ${centered ? 'centered' : ''}`}>
-    {eyebrow && <p className="eyebrow">{eyebrow}</p>}
-    <h2>{title}</h2>
-    {copy && <p className="section-copy">{copy}</p>}
-  </div>;
+function SectionHeading({ eyebrow, title, copy }) {
+  return <div className="section-heading"><span className="eyebrow">{eyebrow}</span><h2>{title}</h2>{copy && <p>{copy}</p>}</div>;
 }
 
 function App() {
+  const [path, setPath] = useState(() => window.location.pathname || '/');
   const [menuOpen, setMenuOpen] = useState(false);
-  const [openFaq, setOpenFaq] = useState(0);
+  const [theme, setTheme] = useState('harbour');
   const [sent, setSent] = useState(false);
-
-  const closeMenu = () => setMenuOpen(false);
-  const scrollTo = (id) => { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' }); closeMenu(); };
-
-  const submitForm = (event) => {
-    event.preventDefault();
-    setSent(true);
-    event.currentTarget.reset();
-  };
-
-  return <>
-    <header className="site-header">
-      <div className="utility"><span>info@seaoraonline.com &nbsp;•&nbsp; +91 4639 251614</span><span>Manapad, Tamil Nadu, India &nbsp;|&nbsp; Dubai, UAE</span></div>
-      <div className="navigation shell">
-        <button className="brand" onClick={() => scrollTo('home')} aria-label="Seaora home">Sea<span>o</span>ra<i>✦</i></button>
-        <button className="menu-toggle" onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle navigation" aria-expanded={menuOpen}><span></span><span></span><span></span></button>
-        <nav className={menuOpen ? 'open' : ''}>{navItems.map(([label, id]) => <button key={id} onClick={() => scrollTo(id)}>{label}</button>)}</nav>
-        <button className="button button-small nav-contact" onClick={() => scrollTo('contact')}>Contact Us</button>
-      </div>
-    </header>
-
-    <main>
-      <section className="hero" id="home">
-        <div className="shell hero-grid">
-          <div className="hero-copy">
-            <p className="eyebrow">Manufacturer & exporter</p>
-            <h1>Premium marine nutrition ingredients, sourced and processed on the Tamil Nadu coast.</h1>
-            <p className="lead">Straight from the sea to the mill - in hours, not days. Seaora turns fresh coastal catch into Fish Meal, Fish Oil, and Fish Soluble Paste with nutrition and freshness locked in.</p>
-            <div className="hero-actions"><button className="button" onClick={() => scrollTo('contact')}>Request a quote <b>→</b></button><button className="button button-outline" onClick={() => scrollTo('products')}>Explore products</button></div>
-            <div className="trust-list"><span>✓ Export ready</span><span>✓ Batch tested</span><span>✓ Bulk supply</span></div>
-          </div>
-          <div className="hero-image" aria-hidden="true">
-            <div className="hero-horizon"></div>
-            <div className="marine-orb orb-one"></div>
-            <div className="marine-orb orb-two"></div>
-            <div className="marine-orb orb-three"></div>
-            <div className="product-monolith">
-              <span className="monolith-kicker">Marine grade</span>
-              <strong>SEA<br/>ORA</strong>
-              <i>Pure coastal nutrition</i>
-            </div>
-            <div className="hero-wave wave-a"></div>
-            <div className="hero-wave wave-b"></div>
-            <p>From the sea<br/><em>to the mill</em></p>
-          </div>
-        </div>
-      </section>
-
-      <section className="compliance-strip"><div className="shell"><span>Quality & compliance</span><b>GMP+ Certified</b><b>FSSC 22000</b><b>HACCP</b><b>Export Registered</b></div></section>
-
-      <section className="products-intro shell" id="products">
-        <SectionTitle eyebrow="Product range" title="Three marine ingredients, engineered for feed performance." copy="Full specification sheets are available on request for every grade we manufacture." />
-        <div className="product-quick-list">{productRows.map((product) => <button key={product.name} onClick={() => document.getElementById(product.name.toLowerCase().replaceAll(' ', '-'))?.scrollIntoView({ behavior: 'smooth' })}><span>{product.number}</span><div><small>{product.eyebrow}</small><strong>{product.name}</strong></div><p>{product.description}</p><i>→</i></button>)}</div>
-      </section>
-
-      <section className="sand-section process-preview" id="process">
-        <div className="shell"><SectionTitle eyebrow="Our process" title="From boat to bag, in four controlled steps." />
-          <div className="four-grid">{[['01', 'Fresh Catch Intake', 'From the sea to the mill in hours - freshness that cannot be faked.'], ['02', 'Cooking & Pressing', 'Controlled cooking preserves protein and nutrient structure.'], ['03', 'Drying & Separation', 'Meal, oil, and soluble paste are separated and processed individually.'], ['04', 'Quality Testing', 'Every batch is tested before packing and dispatch.']].map(([number, title, text]) => <article key={number} className="step-card"><span>{number}</span><h3>{title}</h3><p>{text}</p></article>)}</div>
-        </div>
-      </section>
-
-      <section className="quote-section"><blockquote>“Consistent protein content, reliable delivery windows, and responsive communication - exactly what we need from a feed ingredient supplier.”<cite>Feed formulation manager, aquaculture client</cite></blockquote><div className="shell stats"><div><strong>Hours</strong><span>Catch to process</span></div><div><strong>3</strong><span>Core products</span></div><div><strong>3</strong><span>Offices - India & UAE</span></div><div><strong>GMP+</strong><span>Certified facility</span></div></div></section>
-
-      <section className="about-section shell" id="about"><div className="photo-block coast-photo"><p>Manapad, Tamil Nadu</p></div><div><SectionTitle eyebrow="About Seaora" title="From the coast of Manapad, to the world." /><p className="body-copy">Seaora Marine Products Private Limited manufactures Fish Meal, Fish Oil, and Fish Soluble Paste from Manapad, on the southern coast of Tamil Nadu. Our facility is built around one advantage: fresh marine raw material moves from boat to processing within hours of landing.</p><p className="body-copy">We source directly from local fishing communities, maintain controlled processing under one roof, and supply domestic and international feed manufacturers with traceable, consistent marine nutrition ingredients.</p><div className="feature-grid"><div><b>01</b><strong>Hours, not days</strong><span>Raw material reaches our facility within hours of catch.</span></div><div><b>02</b><strong>Coastal advantage</strong><span>Located in a high-yield Tamil Nadu fishing belt.</span></div><div><b>03</b><strong>Community-rooted</strong><span>Direct partnerships with local fishing communities.</span></div><div><b>04</b><strong>Freshness you can test</strong><span>Every batch reflects the difference proximity makes.</span></div></div></div></section>
-
-      <section className="product-details" aria-label="Product specifications">{productRows.map((product) => <article className="product-detail shell" id={product.name.toLowerCase().replaceAll(' ', '-')} key={product.name}><div className="product-aside"><div className="product-photo" style={{ backgroundImage: `url(${product.image})` }}></div><p className="eyebrow">{product.eyebrow}</p><span className="product-number">{product.number}</span></div><div className="product-content"><h2>{product.name}</h2><p className="body-copy">{product.description}</p><div className="spec-table"><div className="spec-row spec-head"><span>Parameter</span><span>{product.name === 'Fish Meal' ? 'Supreme' : 'Typical value'}</span>{product.name === 'Fish Meal' && <><span>Prime</span><span>Standard FAQ</span></>}</div>{product.specs.map((row) => <div className="spec-row" key={row[0]}>{row.map((cell, index) => <span key={index}>{cell}</span>)}</div>)}</div><h4>Key benefits</h4><ul>{product.benefits.map((benefit) => <li key={benefit}>✓ {benefit}</li>)}</ul><button className="text-link" onClick={() => scrollTo('contact')}>Request full specification sheet →</button></div></article>)}</section>
-
-      <section className="sand-section packaging"><div className="shell"><SectionTitle eyebrow="Packaging & supply" title="Flexible packaging for every order size." /><div className="four-grid">{[['Fish Meal', '25 / 50 Kg bags', 'HDPE/PP woven bags with inner liner.'], ['Fish Oil', 'Drums / IBC / Bulk', 'Drums, IBC tanks, or bulk tanker supply.'], ['Custom', 'Private labeling', 'Custom packaging and labeling available on request.'], ['Export', 'Bulk & export orders', 'Documentation suited for international buyers.']].map(([label, title, copy]) => <article key={label} className="pack-card"><p>{label}</p><h3>{title}</h3><span>{copy}</span></article>)}</div></div></section>
-
-      <section className="infrastructure shell" id="infrastructure"><SectionTitle eyebrow="Infrastructure" title="Built for consistency, from coastline to lab." copy="From our coast allocation to our in-house testing lab, every part of our infrastructure protects raw material freshness and product consistency, batch after batch." centered /><div className="infrastructure-image"><div><span>Located directly on a high-yield stretch of the Tamil Nadu coast.</span></div></div><div className="three-grid">{[['01', 'Factory', 'Our ECR Road facility is purpose-built for hygienic Fish Meal, Fish Oil, and Fish Soluble Paste production.'], ['02', 'Warehouse & packing', 'Dedicated finished-goods storage and packing areas support HDPE, drum, and export-ready specifications.'], ['03', 'Chemical & microbiology lab', 'An in-house lab tests protein, moisture, fat, and contamination from intake to dispatch.']].map(([number, title, copy]) => <article key={number} className="facility-card"><b>{number}</b><h3>{title}</h3><p>{copy}</p></article>)}</div></section>
-
-      <section className="process-detail sand-section"><div className="shell"><SectionTitle eyebrow="Manufacturing process" title="From fresh catch to finished ingredient, under controlled conditions." copy="Every stage is designed to preserve nutrient value - from raw material arrival to a packed, tested batch." centered /><div className="timeline">{[['1', 'Raw material intake', 'Fresh catch received and screened for quality within hours of landing.'], ['2', 'Cooking', 'Controlled cooking prepares material for pressing while preserving nutrients.'], ['3', 'Pressing & separation', 'Press cake becomes meal; liquor is separated into oil, solids, and stick water.'], ['4', 'Drying, milling & packing', 'Finished ingredients are cooled, packed, labelled, and stored under controlled conditions.']].map(([number, title, copy]) => <div className="timeline-item" key={number}><span>{number}</span><h3>{title}</h3><p>{copy}</p></div>)}</div></div></section>
-
-      <section className="certifications shell" id="certifications"><SectionTitle eyebrow="Quality & compliance" title="Certified processes, tested for consistency." copy="Every batch undergoes quality checks for protein, moisture, fat, and contamination levels before dispatch." centered /><div className="certificate-grid">{certificates.map((certificate, index) => <div className="certificate" key={certificate}><span>{index < 4 ? '✓' : '◌'}</span><b>{certificate}</b></div>)}</div><div className="quality-grid"><div><h3>Protein & fat content</h3><p>Verified against grade-specific minimums for every batch.</p></div><div><h3>Moisture & contamination</h3><p>Checked to ensure shelf stability and purity.</p></div><div><h3>Batch documentation</h3><p>Full traceability records maintained for every shipment.</p></div></div></section>
-
-      <section className="faq-section sand-section" id="faq"><div className="shell faq-layout"><div><SectionTitle eyebrow="Frequently asked questions" title="Common questions from feed manufacturers and buyers." copy="Cannot find what you are looking for? Reach out directly and our team will get back to you." /></div><div className="faq-list">{faqs.map(([question, answer], index) => <article className={openFaq === index ? 'faq-item expanded' : 'faq-item'} key={question}><button onClick={() => setOpenFaq(openFaq === index ? -1 : index)} aria-expanded={openFaq === index}><span>{question}</span><b>{openFaq === index ? '−' : '+'}</b></button>{openFaq === index && <p>{answer}</p>}</article>)}</div></div></section>
-
-      <section className="contact-section shell" id="contact"><div className="contact-intro"><SectionTitle eyebrow="Get in touch" title="Let’s talk business." copy="Have a requirement, a question, or want to know more about our range? Reach out through any channel below or send us a message directly." /><div className="contact-prompt"><strong>Need a product sheet or bulk supply quote?</strong><a href="mailto:sales@seaoraonline.com">sales@seaoraonline.com →</a></div></div><form onSubmit={submitForm} className="contact-form"><label>Full name<input required name="name" /></label><label>Company name<input required name="company" /></label><div className="form-row"><label>Phone number<input required name="phone" type="tel" /></label><label>Country / region<input name="region" /></label></div><label>Email address<input required name="email" type="email" /></label><label>Product of interest<select name="product"><option>Fish Meal</option><option>Fish Oil</option><option>Fish Soluble Paste</option><option>Bulk / Export order</option></select></label><label>Message<textarea required name="message" rows="5" /></label><button className="button" type="submit">Send message →</button>{sent && <p className="success" role="status">Thank you. Your enquiry has been recorded. Our sales team will contact you shortly.</p>}</form></section>
-
-      <section className="addresses shell"><article><span>Registered office</span><h3>Uvari, Tamil Nadu</h3><p>5/177/1, North Street,<br/>Uvari, Tirunelveli (Dist),<br/>Tamil Nadu 627 651, India</p><a href="tel:+914637212307">+91 4637 212307</a></article><article><span>Factory address</span><h3>Manapad, Tamil Nadu</h3><p>01/423, Micheal Garden,<br/>ECR Main Road, Manapad,<br/>Tuticorin (Dist), Tamil Nadu 628 209</p><a href="tel:+914639251614">+91 4639 251614</a></article><article><span>Sales office</span><h3>Dubai, UAE</h3><p>511, IT Plaza, Dubai Silicon Oasis,<br/>P O Box: 238957,<br/>Dubai, UAE</p><a href="tel:+97143334493">+971 4 333 4493</a></article></section>
-    </main>
-
-    <footer><div className="shell footer-grid"><div><button className="brand footer-brand" onClick={() => scrollTo('home')}>Sea<span>o</span>ra<i>✦</i></button><p>Seaora Marine Products Private Limited manufactures Fish Meal, Fish Oil, and Fish Soluble Paste for domestic and export markets.</p></div><div><strong>Company</strong><button onClick={() => scrollTo('about')}>About Us</button><button onClick={() => scrollTo('infrastructure')}>Infrastructure</button><button onClick={() => scrollTo('contact')}>Contact</button></div><div><strong>Products</strong>{productRows.map((product) => <button key={product.name} onClick={() => scrollTo(product.name.toLowerCase().replaceAll(' ', '-'))}>{product.name}</button>)}</div><div><strong>Resources</strong><button onClick={() => scrollTo('process')}>Manufacturing Process</button><button onClick={() => scrollTo('certifications')}>Certifications</button><button onClick={() => scrollTo('faq')}>FAQ</button></div></div><div className="shell copyright"><span>© 2026 Seaora Marine Products Private Limited. All rights reserved.</span><span>info@seaoraonline.com · sales@seaoraonline.com</span></div></footer>
-  </>;
+  useEffect(() => {
+    const onPop = () => setPath(window.location.pathname || '/');
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+  useEffect(() => { document.documentElement.dataset.theme = theme; }, [theme]);
+  useEffect(() => { window.scrollTo({ top: 0, behavior: 'instant' }); }, [path]);
+  const navigate = (to) => { if (to !== path) { window.history.pushState({}, '', to); setPath(to); } setMenuOpen(false); };
+  const go = (event, to) => { event.preventDefault(); navigate(to); };
+  const submit = (event) => { event.preventDefault(); event.currentTarget.reset(); setSent(true); };
+  const Header = () => <header className="site-header">
+    <div className="topbar"><div className="shell"><span>Marine nutrition ingredients</span><span>Manapad, Tamil Nadu · India</span></div></div>
+    <div className="shell nav-wrap"><a className="brand" href="/" onClick={(e) => go(e, '/')} aria-label="Seaora home"><img src="/assets/seaora-logo-light.jpeg" alt="Seaora Marine Products Private Limited" /></a>
+      <button className="menu-button" aria-label="Open navigation" aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}><i></i><i></i></button>
+      <nav className={menuOpen ? 'show' : ''}>{pages.map(([label, to]) => <a key={to} className={path === to ? 'active' : ''} href={to} onClick={(e) => go(e, to)}>{label}</a>)}</nav>
+      <a href="/contact" className="button button-small desktop-cta" onClick={(e) => go(e, '/contact')}>Request a quote <b>→</b></a></div>
+  </header>;
+  const Footer = () => <footer><div className="shell footer-grid">
+    <div><img className="footer-logo" src="/assets/seaora-logo-dark.jpeg" alt="Seaora Marine Products" /><p>Marine ingredients, made with care for consistent feed performance.</p></div>
+    <div><strong>Explore</strong>{pages.slice(1).map(([name, to]) => <a key={to} href={to} onClick={(e) => go(e, to)}>{name}</a>)}</div>
+    <div><strong>Products</strong>{products.map((product) => <a key={product.name} href="/products" onClick={(e) => go(e, '/products')}>{product.name}</a>)}</div>
+    <div><strong>Contact</strong><a href="mailto:info@seaoraonline.com">info@seaoraonline.com</a><a href="mailto:sales@seaoraonline.com">sales@seaoraonline.com</a><span>Manapad, Tamil Nadu,<br />India</span></div>
+  </div><div className="shell footer-bottom"><span>© {new Date().getFullYear()} Seaora Marine Products Private Limited.</span><a href="/design-directions" onClick={(e) => go(e, '/design-directions')}>Choose a design direction</a></div></footer>;
+  const Home = () => <><section className="hero"><div className="hero-photo"></div><div className="hero-grid shell">
+    <div className="hero-content"><p className="eyebrow light">Seaora marine products private limited</p><h1>Marine nutrition with a coast-to-customer mindset.</h1><p>We shape fresh marine raw material into practical fish meal, fish oil, and soluble paste ingredients for feed makers.</p><div className="hero-actions"><a className="button" href="/products" onClick={(e) => go(e, '/products')}>Explore our products <b>→</b></a><a className="button button-ghost" href="/contact" onClick={(e) => go(e, '/contact')}>Talk to our team</a></div></div>
+    <div className="hero-stamp"><span>Made for</span><strong>marine<br />nutrition</strong><i>↓</i></div></div><div className="hero-scroll shell"><span>Scroll to explore</span><i></i></div></section>
+    <section className="intro shell split"><div><SectionHeading eyebrow="A clear advantage" title="Closer to the source. Focused on the finish." /></div><div><p className="large-copy">Seaora brings a considered, modern approach to marine ingredients. From receiving to packing, every step is designed around freshness, clarity, and dependable supply.</p><a className="text-link" href="/about" onClick={(e) => go(e, '/about')}>Discover Seaora <b>→</b></a></div></section>
+    <section className="product-band"><div className="shell"><SectionHeading eyebrow="Our range" title="Three foundational marine ingredients." copy="Built for feed manufacturers looking for practical, consistent raw materials." /><div className="product-grid">{products.map((product) => <article key={product.name} className="product-card"><span>{product.number}</span><div className="product-disc"></div><p>{product.type}</p><h3>{product.name}</h3><a href="/products" onClick={(e) => go(e, '/products')}>View product <b>→</b></a></article>)}</div></div></section>
+    <section className="metrics-wrap"><div className="shell metrics-grid"><CountUp value={3} label="core product families" /><CountUp value={4} label="carefully managed process stages" /><CountUp value={2} label="sales regions" /></div></section>
+    <section className="process-teaser shell"><div className="process-visual"><div className="process-line"></div><span>01</span><span>02</span><span>03</span><span>04</span></div><div><SectionHeading eyebrow="A considered process" title="Made with control at every stage." copy="We keep the journey simple: intake, controlled processing, separation, and quality review before dispatch." /><a className="button button-dark" href="/process" onClick={(e) => go(e, '/process')}>See how it works <b>→</b></a></div></section>
+    <section className="directions-callout shell"><div><p className="eyebrow">Three homepage directions</p><h2>Choose the expression that feels most like Seaora.</h2></div><a className="button button-dark" href="/design-directions" onClick={(e) => go(e, '/design-directions')}>Compare directions <b>→</b></a></section></>;
+  const About = () => <><section className="page-hero page-hero-about"><div className="shell"><p className="eyebrow light">About Seaora</p><h1>A marine business with a practical point of view.</h1></div></section><section className="shell split content-section"><div><SectionHeading eyebrow="From the coast" title="Built around marine ingredient know-how." /></div><div><p className="large-copy">Seaora Marine Products Private Limited is focused on three important outputs from marine raw material: fish meal, fish oil, and fish soluble paste.</p><p>We work with a simple belief: better processing decisions create better feed ingredients. Our visual identity is designed to reflect the same idea — confident, clean, and connected to the coast.</p><a className="text-link" href="/contact" onClick={(e) => go(e, '/contact')}>Start a conversation <b>→</b></a></div></section><section className="shell principle-grid">{[['01', 'Freshness-led', 'A process shaped around timely handling and care.'], ['02', 'Straightforward supply', 'Clear communication from enquiry through dispatch.'], ['03', 'Quality-minded', 'Documentation and checks designed for consistency.']].map(([no, title, text]) => <article key={no}><span>{no}</span><h3>{title}</h3><p>{text}</p></article>)}</section></>;
+  const Products = () => <><section className="page-hero page-hero-products"><div className="shell"><p className="eyebrow light">Product portfolio</p><h1>Purposeful ingredients for demanding feed formulations.</h1></div></section><section className="shell content-section"><SectionHeading eyebrow="Marine ingredients" title="A focused range, ready for your requirement." /><div className="product-detail-list">{products.map((product, index) => <article key={product.name} className="product-detail"><div className={`detail-image image-${index + 1}`}><span>{product.number}</span><div className="ingredient-object"></div></div><div><p className="eyebrow">{product.type}</p><h2>{product.name}</h2><p>{product.text}</p><ul>{product.details.map((detail) => <li key={detail}>✓ {detail}</li>)}</ul><a className="text-link" href="/contact" onClick={(e) => go(e, '/contact')}>Request a specification <b>→</b></a></div></article>)}</div></section></>;
+  const Process = () => <><section className="page-hero page-hero-process"><div className="shell"><p className="eyebrow light">Our process</p><h1>Four stages. One focus: a dependable finished ingredient.</h1></div></section><section className="shell process-list content-section">{[['01', 'Receive', 'Marine raw material is received and reviewed before it enters the process.'], ['02', 'Process', 'Controlled cooking and pressing prepare the material for separation.'], ['03', 'Separate', 'Meal, oil, and soluble fractions are handled according to their required format.'], ['04', 'Review & pack', 'Finished material is checked, packed, and readied for supply.']].map(([number, title, description]) => <article key={number}><span>{number}</span><div><h2>{title}</h2><p>{description}</p></div><i>↓</i></article>)}</section><section className="process-banner"><div className="shell"><p>FROM COASTAL RAW MATERIAL TO A FINISHED FEED INGREDIENT</p></div></section></>;
+  const Quality = () => <><section className="page-hero page-hero-quality"><div className="shell"><p className="eyebrow light">Quality approach</p><h1>Good output begins with visible controls.</h1></div></section><section className="shell split content-section"><div><SectionHeading eyebrow="Consistency matters" title="A quality mindset across the journey." /></div><div><p className="large-copy">For every requirement, Seaora can discuss relevant product specifications, packing formats, and batch documentation before supply.</p><p>We believe confidence comes from clear expectations — not overpromising. Speak with our team about the requirements that matter to your formulation or market.</p></div></section><section className="quality-checks shell">{[['01', 'Material review', 'A sensible starting point for every production run.'], ['02', 'Process observations', 'Focused controls throughout the manufacturing journey.'], ['03', 'Finished-product check', 'A final review before packing and dispatch.']].map(([number, title, text]) => <article key={number}><span>{number}</span><h3>{title}</h3><p>{text}</p></article>)}</section></>;
+  const Contact = () => <><section className="page-hero page-hero-contact"><div className="shell"><p className="eyebrow light">Contact Seaora</p><h1>Tell us what your business needs.</h1></div></section><section className="shell contact-layout content-section"><div><SectionHeading eyebrow="Make an enquiry" title="Let’s start with the essentials." copy="Share your product, quantity, and destination requirements. Our team will get back to you." /><div className="contact-lines"><a href="mailto:info@seaoraonline.com">info@seaoraonline.com</a><a href="mailto:sales@seaoraonline.com">sales@seaoraonline.com</a><p>Manapad, Tamil Nadu, India</p></div></div><form onSubmit={submit}><label>Your name<input required name="name" placeholder="Name" /></label><label>Company<input required name="company" placeholder="Company name" /></label><label>Email<input required type="email" name="email" placeholder="name@company.com" /></label><label>Requirement<select name="product"><option>Fish Meal</option><option>Fish Oil</option><option>Fish Soluble Paste</option><option>General enquiry</option></select></label><label>Message<textarea required name="message" rows="5" placeholder="Tell us about your requirement" /></label><button className="button" type="submit">Send enquiry <b>→</b></button>{sent && <p className="success">Thank you. Your enquiry has been recorded.</p>}</form></section></>;
+  const Directions = () => <><section className="directions-hero"><div className="shell"><p className="eyebrow">Design options</p><h1>Three ways Seaora could look.</h1><p>Each option works across the full multi-page site. Select one to preview it immediately.</p></div></section><section className="shell direction-list">{directions.map((direction) => <article key={direction.id} className={`direction-card ${theme === direction.id ? 'selected' : ''}`}><div className={`direction-swatch ${direction.id}`}><span>{direction.number}</span><strong>SEAORA</strong><i></i></div><div><p className="eyebrow">Direction {direction.number}</p><h2>{direction.name}</h2><p>{direction.note}</p><button className="text-link" onClick={() => setTheme(direction.id)}>{theme === direction.id ? 'Currently previewing' : 'Preview this direction'} <b>→</b></button></div></article>)}</section></>;
+  const current = path === '/about' ? <About /> : path === '/products' ? <Products /> : path === '/process' ? <Process /> : path === '/quality' ? <Quality /> : path === '/contact' ? <Contact /> : path === '/design-directions' ? <Directions /> : <Home />;
+  return <><Header /><main>{current}</main><Footer /></>;
 }
-
 export default App;
